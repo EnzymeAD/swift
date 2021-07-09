@@ -290,6 +290,8 @@ def apply_default_arguments(toolchain, args):
     if ninja_required and toolchain.ninja is None:
         args.build_ninja = True
 
+    args.extra_cmake_options.append('-DLLVM_ENABLE_PLUGINS=ON')
+
     # Set the default stdlib-deployment-targets, if none were provided.
     if args.stdlib_deployment_targets is None:
         stdlib_targets = default_stdlib_deployment_targets(args)
