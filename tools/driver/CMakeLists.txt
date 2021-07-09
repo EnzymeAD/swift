@@ -47,6 +47,9 @@ add_swift_host_tool(swift-frontend
   SWIFT_COMPONENT compiler
   HAS_SWIFT_MODULES
 )
+
+export_executable_symbols_for_plugins(swift-frontend)
+
 target_link_libraries(swift-frontend
                       PUBLIC
                         swiftDriverTool
