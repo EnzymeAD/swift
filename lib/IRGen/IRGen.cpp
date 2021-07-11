@@ -58,6 +58,7 @@
 #include "llvm/IR/IRPrintingPasses.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/LegacyPassManager.h"
+#include "llvm/IR/LegacyPassNameParser.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/ValueSymbolTable.h"
 #include "llvm/IR/Verifier.h"
@@ -92,6 +93,9 @@
 using namespace swift;
 using namespace irgen;
 using namespace llvm;
+
+static cl::list<const PassInfo*, bool, PassNameParser>
+PassList(cl::desc("Optimizations available:"));
 
 static cl::opt<bool> DisableObjCARCContract(
     "disable-objc-arc-contract", cl::Hidden,
@@ -331,6 +335,17 @@ void swift::performLLVMOptimizations(const IRGenOptions &Opts,
   legacy::PassManager ModulePasses;
   ModulePasses.add(createTargetTransformInfoWrapperPass(
       TargetMachine->getTargetIRAnalysis()));
+
+  for (const auto &PassInfo : PassList) {
+    Pass *Pass = nullptr;
+    if (PassInfo->getNormalCtor())
+      Pass = PassInfo->getNormalCtor()();
+    else
+      errs() << ": cannot create pass: " << PassInfo->getPassName() << "\n";
+    if (Pass) {
+      ModulePasses.add(Pass);
+    }
+  }
 
   // If we're generating a profile, add the lowering pass now.
   if (Opts.GenerateProfile) {
